@@ -12,10 +12,13 @@ public:
   // initialize remaining money
   Player(int);
 
+  void set_money(int balance) { this->money = balance; }
   int get_money() const { return this->money; }
+  std::vector<Card> get_hand() const { return this->hand; }
+  void add_card(Card card) { this->hand.push_back(card); }
 private:
   // hand (cards the player currently has)
-  std::vector<Card> deck;
+  std::vector<Card> hand;
   // amount of money player has left
   int money;
 };

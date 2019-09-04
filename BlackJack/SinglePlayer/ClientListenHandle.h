@@ -43,8 +43,9 @@
 #endif
 
 #define BUFFER_SIZE 1024
-#ifndef PORT
-#define PORT "8080"
+
+#ifndef PORT_STR
+#define PORT_STR "8080"
 #endif
 
 

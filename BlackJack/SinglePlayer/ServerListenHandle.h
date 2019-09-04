@@ -44,7 +44,10 @@
 
 #define BUFFER_SIZE 1024
 #define BACKLOG 5
+
+#ifndef PORT
 #define PORT 8080
+#endif
 
 // function prototypes in this header file manage the creation and set up of server
 // process, and the handlers for sending and receiving data from the player

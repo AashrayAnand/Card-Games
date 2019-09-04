@@ -1,4 +1,7 @@
+#ifndef _CARD_
+#define _CARD_
 #include "Card.h"
+#endif
 
 Card::Card(char suit, char value) {
   this->suit = suit;
@@ -17,7 +20,8 @@ std::string Card::getSuit() const {
   return "Hearts";
 }
 
-int Card::getValue() const { return this->value; }
+char Card::getValue() const { return this->value; }
+char Card::getSuitChar() const { return this->suit; }
 
 bool Card::operator>(const Card &rCard) const { return this->value > rCard.getValue(); }
 bool Card::operator<(const Card &rCard) const { return this->value < rCard.getValue(); }
