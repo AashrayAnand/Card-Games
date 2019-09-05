@@ -105,12 +105,12 @@ void playGame(Client *client) {
         std::cout << "client ERROR playing game" << std::endl;
         break;
       } else if(!res) {
-        if((res = receiveBalance(client->get_fd(), &player, 0)) == -1){
+        if((res = receiveBalance(client->get_fd(), &player, 1)) == -1){
           std::cout << "client ERROR on updating balance" << std::endl;
           break;
         }
       } else {
-        if((res = receiveBalance(client->get_fd(), &player, 1)) == -1){
+        if((res = receiveBalance(client->get_fd(), &player, 0)) == -1){
           std::cout << "client ERROR on updating balance" << std::endl;
           break;
         }
@@ -203,7 +203,6 @@ int round(Client *client, Player *player){
     std::cout << "client ERROR sending status" << std::endl;
     return -1;
   }
-  std::cout << "best sent" << std::endl;
 
   res = getStatus(client->get_fd());
   if(res == -1){
@@ -347,8 +346,6 @@ int getStatus(int *clientfd){
 
   int res = atoi(buffer);
 
-  std::cout << "int received " << res << std::endl;
-
   return res;
 }
 
@@ -360,8 +357,6 @@ int getStatus(int clientfd){
   }
 
   int res = atoi(buffer);
-
-  std::cout << "int received " << res << std::endl;
 
   return res;
 }
@@ -442,7 +437,6 @@ int willDraw(int clientfd, int sum){
     std::cin >> response;
   }
 
-  std::cout << "will draw? " << response << std::endl;
   int status;
   if(!response.compare("yes")){
     status = 1;
@@ -516,7 +510,7 @@ int receiveBalance(int clientfd, Player *player, int plus){
     std::cout << "client ERROR on recv()" << std::endl;
   }
 
-  int diff = 1;//atoi(buffer);
+  int diff = atoi(buffer);
 
   std::cout << "setting money, gaining $" << diff << std::endl;
 
