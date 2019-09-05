@@ -54,7 +54,7 @@
 class Client {
 public:
   int get_fd() const;
-  int createClient();
+  int createClient(const char *);
 private:
   int sockfd;
 };

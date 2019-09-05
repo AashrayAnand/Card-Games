@@ -49,10 +49,10 @@ void playGame(Server *server, int *clientfd){
         std::cout << "Current user bet is: " << currBet << std::endl;
         std::cout << "you win this round, gain $" << currBet << std::endl;
         // add bet to user's balance
-        /*if(updateBalance(clientfd, -1 * currBet) == -1){
+        if(updateBalance(clientfd, -1 * currBet) == -1){
           std::cout << "server ERROR updating balance" << std::endl;
           break;
-        }*/
+        }
       } else {
           std::cout << "you got a blackjack" << std::endl;
           if(updateBalance(clientfd, -2 * currBet) == -1){
@@ -105,14 +105,12 @@ void playGame(Client *client) {
         std::cout << "client ERROR playing game" << std::endl;
         break;
       } else if(!res) {
-        std::cout << "taking away money" << std::endl;
-        if((res = receiveBalance(client->get_fd(), &player, 1)) == -1){
+        if((res = receiveBalance(client->get_fd(), &player, 0)) == -1){
           std::cout << "client ERROR on updating balance" << std::endl;
           break;
         }
       } else {
-        std::cout << "adding money" << std::endl;
-        if((res = receiveBalance(client->get_fd(), &player, 0)) == -1){
+        if((res = receiveBalance(client->get_fd(), &player, 1)) == -1){
           std::cout << "client ERROR on updating balance" << std::endl;
           break;
         }
@@ -175,7 +173,7 @@ int round(Client *client, Player *player){
   }
 
   if(res == -1){
-    std::cout << "server ERROR on draw" << std::endl;
+    std::cout << "client ERROR on draw" << std::endl;
     return -1;
   }
 
@@ -205,11 +203,14 @@ int round(Client *client, Player *player){
     std::cout << "client ERROR sending status" << std::endl;
     return -1;
   }
+  std::cout << "best sent" << std::endl;
 
-  if((res = getStatus(client->get_fd())) == -1){
+  res = getStatus(client->get_fd());
+  if(res == -1){
     std::cout << "client ERROR receiving final result" << std::endl;
     return -1;
   } else if(!res){
+    std::cout << "dealer win" << std::endl;
     return 0;
   }
   // check if user sum > 21, if so, return 0,
@@ -219,6 +220,7 @@ int round(Client *client, Player *player){
   // while none of the sums of the dealer's cards are > user's cards
   // and <= 21, and while the dealer still has at least one sum < 21,
   // keep drawing cards
+  std::cout << "player win" << std::endl;
   return 1;
 }
 
@@ -282,6 +284,7 @@ int round(int *clientfd, Deck *deck){
   if((sum = getStatus(clientfd)) == -1){
     std::cout << "server ERROR getting blackjack/bust result" << std::endl;
   }
+  std::cout << "best received" << std::endl;
 
   // at this point, if we are still in method then the dealer will now
   // draw cards, create a sum vector
@@ -301,7 +304,7 @@ int round(int *clientfd, Deck *deck){
   }
 
   // dealer did not bust, and has a better sum than player, wins the round
-  if(getMinSum(sums) < 21 && getBest(sums) > res){
+  if(getBest(sums) > res){
     std::cout << "dealer wins, scored " << getBest(sums) << " versus " << res << std::endl;
     if(sendStatus(*clientfd, 0) == -1){
       std::cout << "server ERROR sending status" << std::endl;
@@ -328,7 +331,7 @@ int round(int *clientfd, Deck *deck){
 int sendStatus(int clientfd, int status){
   char buffer[BUFFER_SIZE];
   sprintf(buffer, "%d", status);
-  if(send(clientfd, buffer, sizeof(buffer), 0) == -1){
+  if(send(clientfd, &buffer, sizeof(buffer), 0) == -1){
     return -1;
   }
 
@@ -342,15 +345,23 @@ int getStatus(int *clientfd){
     return -1;
   }
 
-  return atoi(buffer);
+  int res = atoi(buffer);
+
+  std::cout << "int received " << res << std::endl;
+
+  return res;
 }
 
 // get status values (used by client socket file descriptor value)
 int getStatus(int clientfd){
-  int res;
-  if((res = recv(clientfd, &res, sizeof(res), 0)) == -1){
+  char buffer[BUFFER_SIZE];
+  if(recv(clientfd, buffer, sizeof(buffer), 0) == -1){
     return -1;
   }
+
+  int res = atoi(buffer);
+
+  std::cout << "int received " << res << std::endl;
 
   return res;
 }
@@ -505,7 +516,7 @@ int receiveBalance(int clientfd, Player *player, int plus){
     std::cout << "client ERROR on recv()" << std::endl;
   }
 
-  int diff = atoi(buffer);
+  int diff = 1;//atoi(buffer);
 
   std::cout << "setting money, gaining $" << diff << std::endl;
 

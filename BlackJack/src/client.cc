@@ -15,7 +15,8 @@
 
 #define PORT "8080"
 
-int main(){
+#define LOCAL_HOST "127.0.0.1"
+int main(int argc, char **argv){
   // client socket file descriptor
   int sockfd;
   char buffer[BUFFER_SIZE];
@@ -24,9 +25,16 @@ int main(){
   Client client;
 
   // create Client and connect to server at appropriate address/port
-  if((sockfd = client.createClient()) == -1){
-    std::cerr << "ERROR: failed to create/bind server socket" << std::endl;
+  if(argc > 1){
+    if((sockfd = client.createClient(argv[1])) == -1){
+      std::cerr << "ERROR: failed to create/bind server socket" << std::endl;
+    }
+  } else {
+    if((sockfd = client.createClient(LOCAL_HOST)) == -1){
+      std::cerr << "ERROR: failed to create/bind server socket" << std::endl;
+    }
   }
+
 
   playGame(&client);
 }

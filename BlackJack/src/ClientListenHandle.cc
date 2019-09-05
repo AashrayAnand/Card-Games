@@ -5,7 +5,7 @@
 
 int Client::get_fd() const { return this->sockfd; }
 
-int Client::createClient(){
+int Client::createClient(const char *addr){
   int sockfd;
   struct addrinfo hint, *res, *rp;
   memset(&hint, 0, sizeof(hint));
@@ -13,7 +13,7 @@ int Client::createClient(){
   hint.ai_socktype = SOCK_STREAM; // client socket fd will be a stream socket
 
   // specify that we are trying to get info for local host at specified port
-  if(getaddrinfo("127.0.0.1", PORT_STR, &hint, &res) < 0){
+  if(getaddrinfo(addr, PORT_STR, &hint, &res) < 0){
     std::cerr << "ERROR on getaddrinfo()" << std::endl;
     return -1;
   }
