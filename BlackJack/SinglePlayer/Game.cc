@@ -98,7 +98,7 @@ void playGame(Client *client) {
         std::cout << "client ERROR playing game" << std::endl;
         break;
       } /*else {
-        if((res = receiveBalance(client->get_fd())) == -1){
+        if((res = receiveBalance(client->get_fd(), &player)) == -1){
           std::cout << "client ERROR on updating balance" << std::endl;
           break;
         }
@@ -118,6 +118,7 @@ void playGame(Client *client) {
 
 int round(Client *client, Player *player){
   std::vector<int> sums;
+  sums.push_back(0);
   int res;
 
   // get first two cards
@@ -131,16 +132,19 @@ int round(Client *client, Player *player){
 
   printHand(player->get_hand());
 
-  /*std::cout << "draw another card?" << std::endl;
-  while((res = checkDraw(client->get_fd())) == 1 && *std::min(sums.begin(), sums.end()) < 21){
-
+  std::cout << "draw another card?" << std::endl;
+  while((res = willDraw(client->get_fd())) == 1 && *std::min(sums.begin(), sums.end()) < 21){
+    if((res = takeCard(client->get_fd(), player, &sums)) == -1){
+      std::cout << "client ERROR taking card" << std::endl;
+    }
+    printHand(player->get_hand());
   }
 
   if(res == -1){
     std::cout << "server ERROR on draw" << std::endl;
     return -1;
   }
-
+/*
   // get best sum (greatest sum <= 21)
   int best = getBest(sums);
 
@@ -168,7 +172,8 @@ int round(int *clientfd, Deck *deck){
     return -1;
   }
   // cotinually ask user if they want to draw another card
-  /*while((res = draw(clientfd)) == 1){
+
+  while((res = checkDraw(clientfd)) == 1){
     if((res = drawCard(clientfd, deck)) == -1){
       std::cout << "server ERROR on drawing card" << std::endl;
       return -1;
@@ -179,6 +184,7 @@ int round(int *clientfd, Deck *deck){
     std::cout << "server ERROR on draw" << std::endl;
     return -1;
   }
+  /*
   // check if user sum > 21, if so, return 0,
   // else if sum == 21, return 1, else if sum < 21,
   // let dealer draw cards
@@ -207,35 +213,56 @@ int drawCard(int *clientfd, Deck *deck){
 }
 
 int takeCard(int clientfd, Player *player, std::vector<int> *sums){
+  // get card from server and add to hand
   char buffer[SMALL_BUFFER_SIZE];
   if(recv(clientfd, buffer, SMALL_BUFFER_SIZE, 0) == -1){
     return -1;
   }
   Card card(buffer[0], buffer[1]);
-  //std::cout << "card received\n" << card << std::endl;
   player->add_card(card);
+  // update possible sums, either increment existing sum by value
+  // of the card, or increment existing values and copy for the 2
+  // possible ace values
+  updateSums(&card, sums);
   return 0;
 }
 
-int checkDraw(int clientfd){
-  return 0;
-}
-
-int draw(int *clientfd){
+int willDraw(int clientfd){
   char buffer[BUFFER_SIZE];
-  if(read(*clientfd, buffer, BUFFER_SIZE) == -1){
+  char response[BUFFER_SIZE];
+  std::cin >> response;
+  while(std::cin.fail() || (strcmp(response, "yes") != 0 && strcmp(response, "no") != 0)){
+    std::cout << "RESPONSE: " << response << std::endl;
+    std::cout << "response must be a yes or no (case-sensitive)" << std::endl;
+    std::cin.clear();
+    std::cin.ignore(256, '\n');
+    std::cin >> response;
+  }
+
+  strncpy(buffer, response, sizeof(buffer));
+
+  if(send(clientfd, buffer, BUFFER_SIZE, 0) == -1){
+    return -1;
+  }
+
+  return 1;
+}
+
+int checkDraw(int *clientfd){
+  char buffer[BUFFER_SIZE];
+  if(recv(*clientfd, buffer, BUFFER_SIZE, 0) == -1){
     std::cerr << "server ERROR on recv()" << std::endl;
     return -1;
   }
 
   // client serializes integer balance data, convert this string
   // representation of the balance to an int and return
-  return atoi(buffer);
+  return strcmp(buffer, "yes") == 0;
 }
 
 int getBalance(int *clientfd){
   char buffer[BUFFER_SIZE];
-  if(read(*clientfd, buffer, BUFFER_SIZE) == -1){
+  if(recv(*clientfd, buffer, BUFFER_SIZE, 0) == -1){
     std::cerr << "server ERROR on recv()" << std::endl;
     return -1;
   }
@@ -272,7 +299,14 @@ int updateBalance(int *clientfd, int bet){
   return 0;
 }
 
-int receiveBalance(int clientfd){
+int receiveBalance(int clientfd, Player *player){
+  char buffer[BUFFER_SIZE];
+  if(recv(clientfd, buffer, BUFFER_SIZE, 0) == -1){
+    std::cout << "client ERROR on recv()" << std::endl;
+  }
+
+  // add bet (or subtract bet) to/from balance
+  player->set_money(player->get_money() + atoi(buffer));
   return 0;
 }
 

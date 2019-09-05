@@ -13,7 +13,7 @@
 #include "Serialize.h"
 #endif
 
-// small buffer, which is used to send serialized 
+// small buffer, which is used to send serialized
 #ifndef SMALL_BUFFER_SIZE
 #define SMALL_BUFFER_SIZE 2
 #endif
@@ -51,7 +51,7 @@ int getBet(int *);
 // post: gets a bet from the player, and sends it to the server
 int sendBet(Client *, int);
 
-int draw(int *);
+int checkDraw(int *);
 
 int getBest(std::vector<int>);
 
@@ -59,10 +59,14 @@ void printHand(std::vector<Card>);
 
 int drawCard(int *, Deck *);
 
-int checkDraw(int);
+int willDraw(int);
 
 int takeCard(int, Player *, std::vector<int> *);
 
 int updateBalance(int *, int);
 
-int receiveBalance(int);
+int receiveBalance(int, Player *);
+
+// pre: must take a card object, and a set of possible hand sums
+// post: updates the set of possible hand sums, based on the newly drawn card
+void updateSums(Card *, std::vector<int> *);
